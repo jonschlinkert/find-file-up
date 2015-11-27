@@ -19,9 +19,19 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {},
+  "dependencies": {
+    "resolve-dir": "^0.1.0"
+  },
   "devDependencies": {
+    "delete": "^0.2.1",
     "mocha": "*"
   },
-  "keywords": []
+  "verb": {
+    "related": {
+      "list": [
+        "look-up",
+        "findup-sync"
+      ]
+    }
+  }
 }
