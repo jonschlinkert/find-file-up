@@ -20,43 +20,57 @@ var cwd = process.cwd();
  * Find a file, starting with the given directory
  */
 
-module.exports = function findFile(filename, dir, cb) {
-  if (typeof dir === 'function') {
-    cb = dir;
-    dir = '.';
+module.exports = function(filename, cwd, cb) {
+  if (typeof cwd === 'function') {
+    cb = cwd;
+    cwd = null;
   }
 
-  dir = resolve(dir);
+  var dir = cwd ? resolve(cwd) : '.';
 
-  function find(dir, next) {
-    var fp = path.resolve(dir, filename);
-    fs.exists(fp, function(exists) {
-      if (exists) {
-        cb(null, fp);
-        return;
+  (function find(dir, next) {
+    var filepath = path.resolve(dir, filename);
+    exists(filepath, function(exists) {
+      if (exists) return next(null, filepath);
+
+      if (dir !== path.sep) {
+        return find(path.dirname(dir), next);
       }
-      if (dir === cwd || dir === '.' || dir === path.sep) {
-        next();
-      } else {
-        find(path.dirname(dir), next);
-      }
+      return next();
     });
-  }
-  find(resolve(dir), cb);
+  }(dir, cb));
 };
 
-module.exports.sync = function findFileSync(filename, dir) {
-  dir = dir ? resolve(dir) : '.';
+module.exports.sync = function(filename, cwd) {
+  var dir = path.join(cwd ? resolve(cwd) : '.', '_');
 
-  function find(dir) {
-    var fp = path.resolve(dir, filename);
-    if (fs.existsSync(fp)) {
-      return fp;
+  while ((dir = path.dirname(dir)) !== path.sep) {
+    var filepath = path.resolve(dir, filename);
+
+    if (existsSync(filepath)) {
+      return filepath;
     }
-    if (dir === cwd || dir === '.' || dir === path.sep) {
-      return;
-    }
-    return find(path.dirname(dir));
   }
-  return find(resolve(dir));
 };
+
+/**
+ * Utils for checking if a file exists. Uses `fs.access` since
+ * `fs.exists` and `fs.existsSync` are deprecated.
+ *
+ * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
+ */
+
+function exists(filepath, cb) {
+  (fs.access || fs.stat)(filepath, function(err) {
+    if (err) return cb(false);
+    return cb(true);
+  });
+}
+
+function existsSync(filepath) {
+  try {
+    (fs.accessSync || fs.statSync)(filepath);
+    return true;
+  } catch (err) {}
+  return false
+}
