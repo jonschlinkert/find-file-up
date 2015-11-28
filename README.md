@@ -13,15 +13,35 @@ $ npm i find-file-up --save
 ## Usage
 
 ```js
-var findFileUp = require('find-file-up');
+var findFile = require('find-file-up');
 ```
 
-## API
+**async**
+
+```js
+// find `foo.txt` starting at the given directory
+findFile('foo.txt', '.', function(err, fp) {
+  //=> /Users/jonschlinkert/dev/find-file-up/fixtures/foo.txt
+});
+
+// search user home
+findFile('foo.txt', '~/', function(err, fp) {
+  //=> /Users/jonschlinkert/foo.txt
+});
+```
+
+**sync**
+
+```js
+var file = findFile.sync('foo.txt', 'a/b/c/');
+```
 
 ## Related projects
 
-* [findup-sync](https://www.npmjs.com/package/findup-sync): Find the first file matching a given pattern in the current directory or the nearest… [more](https://www.npmjs.com/package/findup-sync) | [homepage](https://github.com/cowboy/node-findup-sync)
+* [load-module-pkg](https://www.npmjs.com/package/load-module-pkg): Load the package.json for any project currently installed in node_modules. | [homepage](https://github.com/jonschlinkert/load-module-pkg)
+* [load-pkg](https://www.npmjs.com/package/load-pkg): Loads the package.json from the root of the user's current project. | [homepage](https://github.com/jonschlinkert/load-pkg)
 * [look-up](https://www.npmjs.com/package/look-up): Faster drop-in replacement for find-up and findup-sync. | [homepage](https://github.com/jonschlinkert/look-up)
+* [module-root](https://www.npmjs.com/package/module-root): Get the resolved path the root directory of any npm package locally installed in node_modules. | [homepage](https://github.com/jonschlinkert/module-root)
 
 ## Running tests
 
