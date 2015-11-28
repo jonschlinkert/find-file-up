@@ -1,6 +1,6 @@
 {
   "name": "find-file-up",
-  "description": "Find a file, starting with the given cwd and recursively searching up one directory until it's found (or we run out of directories).",
+  "description": "Find a file, starting with the given cwd and recursively searching up one directory until it's found (or we run out of directories). Async and sync.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/find-file-up",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -30,7 +30,9 @@
     "related": {
       "list": [
         "look-up",
-        "findup-sync"
+        "load-pkg",
+        "load-module-pkg",
+        "module-root"
       ]
     }
   }
