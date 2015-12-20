@@ -14,63 +14,90 @@
 var fs = require('fs');
 var path = require('path');
 var resolve = require('resolve-dir');
+var existsSync = require('try-open');
 var cwd = process.cwd();
 
 /**
  * Find a file, starting with the given directory
  */
 
-module.exports = function(filename, cwd, cb) {
+module.exports = function(filename, cwd, limit, cb) {
   if (typeof cwd === 'function') {
     cb = cwd;
     cwd = null;
   }
 
+  if (typeof limit === 'function') {
+    cb = limit;
+    limit = Infinity;
+  }
+
   var dir = cwd ? resolve(cwd) : '.';
+  var n = 0;
 
   (function find(dir, next) {
-    var filepath = path.resolve(dir, filename);
-    exists(filepath, function(exists) {
-      if (exists) return next(null, filepath);
+    var fp = path.resolve(dir, filename);
 
-      if (dir !== path.sep) {
-        return find(path.dirname(dir), next);
+    exists(fp, function(exists) {
+      n++;
+
+      if (exists) {
+        next(null, fp);
+        return;
       }
-      return next();
+
+      if (n >= limit || dir === path.sep || dir === '.') {
+        next();
+        return;
+      }
+
+      find(path.dirname(dir), next);
     });
   }(dir, cb));
 };
 
-module.exports.sync = function(filename, cwd) {
-  var dir = path.join(cwd ? resolve(cwd) : '.', '_');
+module.exports.sync = function(filename, cwd, limit) {
+  var dir = cwd ? resolve(cwd) : '.';
+  var fp = path.join(dir, filename);
+  var n = 0;
 
-  while ((dir = path.dirname(dir)) !== path.sep) {
+  if (existsSync(fp, 'r')) {
+    return path.resolve(fp);
+  }
+
+  if (limit === 0) return null;
+
+  while ((dir = path.dirname(dir))) {
+    n++;
+
     var filepath = path.resolve(dir, filename);
-
-    if (existsSync(filepath)) {
+    if (existsSync(filepath, 'r')) {
       return filepath;
+    }
+
+    if (n >= limit || dir === '.' || dir === path.sep) {
+      return;
     }
   }
 };
 
 /**
- * Utils for checking if a file exists. Uses `fs.access` since
- * `fs.exists` and `fs.existsSync` are deprecated.
+ * Returns true if a file exists. `fs.exists`
+ * and `fs.existsSync` are deprecated.
  *
  * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
  */
 
 function exists(filepath, cb) {
-  (fs.access || fs.stat)(filepath, function(err) {
-    if (err) return cb(false);
-    return cb(true);
+  fs.open(filepath, 'r', function(err) {
+    if (err && err.code === 'ENOENT') {
+      cb(false);
+      return
+    }
+    if (err) {
+      cb(err);
+      return;
+    }
+    cb(true);
   });
-}
-
-function existsSync(filepath) {
-  try {
-    (fs.accessSync || fs.statSync)(filepath);
-    return true;
-  } catch (err) {}
-  return false
 }
