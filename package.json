@@ -20,20 +20,29 @@
     "test": "mocha"
   },
   "dependencies": {
-    "resolve-dir": "^0.1.0"
+    "resolve-dir": "^0.1.0",
+    "try-open": "^0.1.0"
   },
   "devDependencies": {
     "delete": "^0.2.1",
     "mocha": "*"
   },
+  "keywords": [
+    "file",
+    "find",
+    "up"
+  ],
   "verb": {
     "related": {
       "list": [
-        "look-up",
-        "load-pkg",
         "load-module-pkg",
+        "load-pkg",
+        "look-up",
         "module-root"
       ]
-    }
+    },
+    "plugins": [
+      "gulp-format-md"
+    ]
   }
 }
