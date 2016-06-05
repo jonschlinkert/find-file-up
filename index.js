@@ -14,8 +14,7 @@
 var fs = require('fs');
 var path = require('path');
 var resolve = require('resolve-dir');
-var existsSync = require('try-open');
-var cwd = process.cwd();
+var existsSync = require('fs-exists-sync');
 
 /**
  * Find a file, starting with the given directory
@@ -61,7 +60,7 @@ module.exports.sync = function(filename, cwd, limit) {
   var fp = path.join(dir, filename);
   var n = 0;
 
-  if (existsSync(fp, 'r')) {
+  if (existsSync(fp)) {
     return path.resolve(fp);
   }
 
@@ -71,7 +70,7 @@ module.exports.sync = function(filename, cwd, limit) {
     n++;
 
     var filepath = path.resolve(dir, filename);
-    if (existsSync(filepath, 'r')) {
+    if (existsSync(filepath)) {
       return filepath;
     }
 
@@ -82,17 +81,15 @@ module.exports.sync = function(filename, cwd, limit) {
 };
 
 /**
- * Returns true if a file exists. `fs.exists`
- * and `fs.existsSync` are deprecated.
- *
+ * Returns true if a file exists. `fs.exists` and `fs.existsSync` are deprecated.
  * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
  */
 
 function exists(filepath, cb) {
-  fs.open(filepath, 'r', function(err) {
+  (fs.access || fs.stat)(filepath, function(err) {
     if (err && err.code === 'ENOENT') {
       cb(false);
-      return
+      return;
     }
     if (err) {
       cb(err);

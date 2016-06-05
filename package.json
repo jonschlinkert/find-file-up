@@ -20,12 +20,13 @@
     "test": "mocha"
   },
   "dependencies": {
-    "resolve-dir": "^0.1.0",
-    "try-open": "^0.1.0"
+    "fs-exists-sync": "^0.1.0",
+    "resolve-dir": "^0.1.0"
   },
   "devDependencies": {
-    "delete": "^0.2.1",
-    "mocha": "*"
+    "delete": "^0.3.2",
+    "gulp-format-md": "^0.1.9",
+    "mocha": "^2.5.3"
   },
   "keywords": [
     "file",
@@ -33,16 +34,29 @@
     "up"
   ],
   "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
     "related": {
       "list": [
         "load-module-pkg",
         "load-pkg",
-        "look-up",
-        "module-root"
+        "findup-sync",
+        "find-pkg",
+        "global-prefix",
+        "global-modules"
       ]
     },
-    "plugins": [
-      "gulp-format-md"
-    ]
+    "reflinks": [
+      "verb"
+    ],
+    "lint": {
+      "reflinks": true
+    }
   }
 }
