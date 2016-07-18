@@ -1,10 +1,3 @@
-/*!
- * find-pkg <https://github.com/jonschlinkert/find-pkg>
- *
- * Copyright (c) 2015 .
- * Licensed under the MIT license.
- */
-
 'use strict';
 
 require('mocha');
