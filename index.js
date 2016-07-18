@@ -33,6 +33,7 @@ module.exports = function(filename, cwd, limit, cb) {
 
   var dir = cwd ? resolve(cwd) : '.';
   var n = 0;
+  var drive = path.resolve(path.sep);
 
   (function find(dir, next) {
     var fp = path.resolve(dir, filename);
@@ -45,7 +46,7 @@ module.exports = function(filename, cwd, limit, cb) {
         return;
       }
 
-      if (n >= limit || dir === path.sep || dir === '.') {
+      if (n >= limit || dir === path.sep || dir === '.' || dir === drive) {
         next();
         return;
       }
@@ -59,6 +60,7 @@ module.exports.sync = function(filename, cwd, limit) {
   var dir = cwd ? resolve(cwd) : '.';
   var fp = path.join(dir, filename);
   var n = 0;
+  var drive = path.resolve(path.sep);
 
   if (existsSync(fp)) {
     return path.resolve(fp);
@@ -74,7 +76,7 @@ module.exports.sync = function(filename, cwd, limit) {
       return filepath;
     }
 
-    if (n >= limit || dir === '.' || dir === path.sep) {
+    if (n >= limit || dir === '.' || dir === path.sep || dir === drive) {
       return;
     }
   }
