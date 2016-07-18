@@ -10,7 +10,9 @@
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "LICENSE",
+    "README.md"
   ],
   "main": "index.js",
   "engines": {
@@ -44,12 +46,12 @@
     ],
     "related": {
       "list": [
-        "load-module-pkg",
-        "load-pkg",
-        "findup-sync",
         "find-pkg",
+        "findup-sync",
+        "global-modules",
         "global-prefix",
-        "global-modules"
+        "load-module-pkg",
+        "load-pkg"
       ]
     },
     "reflinks": [
