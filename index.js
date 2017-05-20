@@ -33,7 +33,12 @@ module.exports = function(filename, cwd, limit, cb) {
   (function find(dir, next) {
     var fp = path.resolve(dir, filename);
 
-    exists(fp, function(exists) {
+    fileExists(fp, function(err, exists) {
+      if (err) {
+        next(err);
+        return;
+      }
+
       n++;
 
       if (exists) {
@@ -82,16 +87,16 @@ module.exports.sync = function(filename, cwd, limit) {
  * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
  */
 
-function exists(filepath, cb) {
+function fileExists(filepath, cb) {
   fs.stat(filepath, function(err) {
     if (err && err.code === 'ENOENT') {
-      cb(false);
+      cb(null, false);
       return;
     }
     if (err) {
       cb(err);
       return;
     }
-    cb(true);
+    cb(null, true);
   });
 }
