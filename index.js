@@ -1,20 +1,15 @@
 /*!
- * find-pkg <https://github.com/jonschlinkert/find-pkg>
+ * find-file-up <https://github.com/jonschlinkert/find-file-up>
  *
- * Copyright (c) 2015, Jon Schlinkert.
- * Licensed under the MIT License.
+ * Copyright (c) 2015, 2017, Jon Schlinkert.
+ * Released under the MIT License.
  */
 
 'use strict';
 
-/**
- * Module dependencies
- */
-
 var fs = require('fs');
 var path = require('path');
 var resolve = require('resolve-dir');
-var existsSync = require('fs-exists-sync');
 
 /**
  * Find a file, starting with the given directory
@@ -62,7 +57,7 @@ module.exports.sync = function(filename, cwd, limit) {
   var n = 0;
   var drive = path.resolve(path.sep);
 
-  if (existsSync(fp)) {
+  if (fs.existsSync(fp)) {
     return path.resolve(fp);
   }
 
@@ -72,7 +67,7 @@ module.exports.sync = function(filename, cwd, limit) {
     n++;
 
     var filepath = path.resolve(dir, filename);
-    if (existsSync(filepath)) {
+    if (fs.existsSync(filepath)) {
       return filepath;
     }
 
@@ -83,12 +78,12 @@ module.exports.sync = function(filename, cwd, limit) {
 };
 
 /**
- * Returns true if a file exists. `fs.exists` and `fs.existsSync` are deprecated.
+ * Returns true if a file exists, since `fs.exists` is deprecated.
  * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
  */
 
 function exists(filepath, cb) {
-  (fs.access || fs.stat)(filepath, function(err) {
+  fs.stat(filepath, function(err) {
     if (err && err.code === 'ENOENT') {
       cb(false);
       return;
