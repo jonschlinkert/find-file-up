@@ -1,6 +1,6 @@
 {
   "name": "find-file-up",
-  "description": "Find a file, starting with the given cwd and recursively searching up one directory until it's found (or we run out of directories). Async and sync.",
+  "description": "Find a file fast, by starting at the given cwd and recursing up one directory until the file is found or we run out of directories.",
   "version": "1.0.2",
   "homepage": "https://github.com/jonschlinkert/find-file-up",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -24,12 +24,13 @@
     "test": "mocha"
   },
   "dependencies": {
-    "resolve-dir": "^1.0.0"
+    "resolve-dir": "^1.0.1"
   },
   "devDependencies": {
-    "delete": "^1.0.1",
-    "gulp-format-md": "^0.1.12",
-    "mocha": "^3.4.1"
+    "delete": "^1.1.0",
+    "gulp-format-md": "^1.0.0",
+    "mocha": "^3.5.3",
+    "write": "^1.0.3"
   },
   "keywords": [
     "file",
@@ -49,15 +50,9 @@
       "list": [
         "find-pkg",
         "findup-sync",
-        "global-modules",
-        "global-prefix",
-        "load-module-pkg",
-        "load-pkg"
+        "global-modules"
       ]
     },
-    "reflinks": [
-      "verb"
-    ],
     "lint": {
       "reflinks": true
     }

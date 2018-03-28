@@ -1,19 +1,28 @@
 'use strict';
 
 require('mocha');
-var fs = require('fs');
-var path = require('path');
-var resolve = require('resolve-dir');
-var assert = require('assert');
-var findFile = require('./');
-var del = require('delete');
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+const write = require('write');
+const resolve = require('resolve-dir');
+const del = require('delete');
+const find = require('./');
 
 describe('find-file', function() {
   describe('async', function() {
-    it('should resolve a file in the cwd:', function(cb) {
-      findFile('index.js', '.', function(err, fp) {
+    it('should resolve a file in the cwd when . is given', function(cb) {
+      find('index.js', '.', function(err, file) {
         if (err) return cb(err);
-        assert.equal(fp, path.resolve('index.js'));
+        assert.equal(file, path.resolve('index.js'));
+        cb();
+      });
+    });
+
+    it('should resolve a file in the cwd', function(cb) {
+      find('index.js', function(err, file) {
+        if (err) return cb(err);
+        assert.equal(file, path.resolve('index.js'));
         cb();
       });
     });
@@ -22,90 +31,132 @@ describe('find-file', function() {
       fs.writeFile(resolve('~/__foo.js'), 'tmp', function(err) {
         if (err) return cb(err);
 
-        findFile('__foo.js', '~/_a/b/c', function(err, fp) {
+        find('__foo.js', '~/_a/b/c', function(err, file) {
           if (err) return cb(err);
-          assert.equal(fp, resolve('~/__foo.js'));
-          del(fp, {force: true}, cb);
+          assert.equal(file, resolve('~/__foo.js'));
+          del(file, {force: true}, cb);
         });
       });
     });
 
     it('should return undefined when the file does not exist:', function(cb) {
-      findFile('whatever.js', resolve('~/a/b/c'), function(err, fp) {
+      find('whatever.js', resolve('~/a/b/c'), function(err, file) {
         if (err) return cb(err);
-        assert.equal(fp, undefined);
+        assert.equal(file, undefined);
         cb();
       });
     });
 
     it('should resolve a file from one directory up:', function(cb) {
-      findFile('index.js', 'test', function(err, fp) {
+      find('index.js', 'test', function(err, file) {
         if (err) return cb(err);
-        assert.equal(fp, path.resolve('index.js'));
+        assert.equal(file, path.resolve('index.js'));
         cb();
       });
     });
 
     it('should limit the number of directories to recurse', function(cb) {
-      findFile('b.txt', 'fixtures/a/b/c/d/e', 5, function(err, fp) {
+      find('b.txt', 'fixtures/a/b/c/d/e', 5, function(err, file) {
         if (err) return cb(err);
-        assert.equal(fp, path.resolve('fixtures/a/b/b.txt'));
+        assert.equal(file, path.resolve('fixtures/a/b/b.txt'));
 
-        findFile('b.txt', 'fixtures/a/b/c/d/e', 2, function(err, fp) {
+        find('b.txt', 'fixtures/a/b/c/d/e', 2, function(err, file) {
           if (err) return cb(err);
-          assert.equal(fp, undefined);
+          assert.equal(file, undefined);
           cb();
         });
       });
     });
 
     it('should resolve index.js from multiple directories up:', function(cb) {
-      findFile('index.js', 'test/a/b/c/c/', function(err, fp) {
+      find('index.js', 'test/a/b/c/c/', function(err, file) {
         if (err) return cb(err);
-        assert.equal(fp, path.resolve('index.js'));
+        assert.equal(file, path.resolve('index.js'));
         cb();
       });
     });
   });
 
+  describe('promise', function() {
+    it('should resolve a file in the cwd when . is given', async() => {
+      const file = await find('index.js', '.');
+      assert.equal(file, path.resolve('index.js'));
+    });
+
+    it('should resolve a file in the cwd', async() => {
+      const file = await find('index.js');
+      assert.equal(file, path.resolve('index.js'));
+    });
+
+    it('should resolve a file from user home:', async() => {
+      await write(path.resolve(resolve('~/__finduptestfile.js')), 'tmp');
+      const file = await find('__finduptestfile.js', '~/_a/b/c');
+      assert.equal(file, resolve('~/__finduptestfile.js'));
+      return del(file, { force: true });
+    });
+
+    it('should return undefined when the file does not exist:', async() => {
+      const file = await find('whatever.js', resolve('~/a/b/c'));
+      assert(!file);
+    });
+
+    it('should resolve a file from one directory up:', async() => {
+      const file = await find('index.js', 'test');
+      assert.equal(file, path.resolve('index.js'));
+    });
+
+    it('should limit the number of directories to recurse', async() => {
+      let file = await find('b.txt', 'fixtures/a/b/c/d/e', 5);
+      assert.equal(file, path.resolve('fixtures/a/b/b.txt'));
+
+      file = await find('b.txt', 'fixtures/a/b/c/d/e', 2);
+      assert(!file);
+    });
+
+    it('should resolve index.js from multiple directories up:', async() => {
+      const file = await find('index.js', 'test/a/b/c/c/');
+      assert.equal(file, path.resolve('index.js'));
+    });
+  });
+
   describe('sync', function() {
     it('should resolve a file in the cwd:', function() {
-      var fp = findFile.sync('index.js', '.');
-      assert.equal(fp, path.resolve('index.js'));
+      const file = find.sync('index.js', '.');
+      assert.equal(file, path.resolve('index.js'));
     });
 
     it('should resolve a file from user home:', function() {
       fs.writeFileSync(resolve('~/__foo.js'), 'tmp');
 
-      var fp = findFile.sync('__foo.js', '~/_a/b/c');
-      assert.equal(fp, resolve('~/__foo.js'));
-      del.sync(fp, {force: true});
+      const file = find.sync('__foo.js', '~/_a/b/c');
+      assert.equal(file, resolve('~/__foo.js'));
+      del.sync(file, {force: true});
     });
 
     it('should return undefined when the file does not exist:', function() {
-      var fp = findFile.sync('whatever.js', resolve('~/a/b/c'));
-      assert.equal(fp, undefined);
+      const file = find.sync('whatever.js', resolve('~/a/b/c'));
+      assert.equal(file, undefined);
     });
 
     it('should resolve a file from one directory up:', function() {
-      var fp = findFile.sync('index.js', 'test');
-      assert.equal(fp, path.resolve('index.js'));
+      const file = find.sync('index.js', 'test');
+      assert.equal(file, path.resolve('index.js'));
     });
 
     it('should limit the number of directories to recurse', function() {
-      var fp = findFile.sync('b.txt', 'fixtures/a/b/c/d/e');
-      assert.equal(fp, path.resolve('fixtures/a/b/b.txt'));
+      let file = find.sync('b.txt', 'fixtures/a/b/c/d/e');
+      assert.equal(file, path.resolve('fixtures/a/b/b.txt'));
 
-      fp = findFile.sync('b.txt', 'fixtures/a/b/c/d/e', 3);
-      assert.equal(fp, path.resolve('fixtures/a/b/b.txt'));
+      file = find.sync('b.txt', 'fixtures/a/b/c/d/e', 3);
+      assert.equal(file, path.resolve('fixtures/a/b/b.txt'));
 
-      fp = findFile.sync('b.txt', 'fixtures/a/b/c/d/e', 2);
-      assert.equal(fp, undefined);
+      file = find.sync('b.txt', 'fixtures/a/b/c/d/e', 2);
+      assert.equal(file, undefined);
     });
 
     it('should resolve index.js from multiple directories up:', function() {
-      var fp = findFile.sync('index.js', 'test/a/b/c/c/');
-      assert.equal(fp, path.resolve('index.js'));
+      const file = find.sync('index.js', 'test/a/b/c/c/');
+      assert.equal(file, path.resolve('index.js'));
     });
   });
 });

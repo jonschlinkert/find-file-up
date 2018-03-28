@@ -1,102 +1,77 @@
-/*!
- * find-file-up <https://github.com/jonschlinkert/find-file-up>
- *
- * Copyright (c) 2015, 2017, Jon Schlinkert.
- * Released under the MIT License.
- */
-
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var resolve = require('resolve-dir');
+const fs = require('fs');
+const path = require('path');
+const util = require('util');
+const resolve = require('resolve-dir');
 
-/**
- * Find a file, starting with the given directory
- */
-
-module.exports = function(filename, cwd, limit, cb) {
+function find(filename, cwd, limit = Infinity, callback) {
   if (typeof cwd === 'function') {
-    cb = cwd;
+    callback = cwd;
     cwd = null;
   }
 
   if (typeof limit === 'function') {
-    cb = limit;
+    callback = limit;
     limit = Infinity;
   }
 
-  var dir = cwd ? resolve(cwd) : '.';
-  var n = 0;
-  var drive = path.resolve(path.sep);
+  if (typeof callback !== 'function') {
+    return find.promise(filename, cwd, limit);
+  }
 
-  (function find(dir, next) {
-    var fp = path.resolve(dir, filename);
+  const dirname = path.resolve(cwd ? resolve(cwd) : '.');
+  let depth = 0;
+  let prev;
 
-    fileExists(fp, function(err, exists) {
-      if (err) {
+  function recurse(dirname, next) {
+    const filepath = path.join(dirname, filename);
+
+    fs.stat(filepath, function(err, stat) {
+      if (err && err.code !== 'ENOENT') {
         next(err);
         return;
       }
 
-      n++;
-
-      if (exists) {
-        next(null, fp);
+      if (stat) {
+        next(null, filepath);
         return;
       }
 
-      if (n >= limit || dir === path.sep || dir === '.' || dir === drive) {
-        next();
+      if (prev !== dirname && depth < limit) {
+        prev = dirname;
+        depth++;
+        recurse(path.dirname(dirname), next);
         return;
       }
 
-      find(path.dirname(dir), next);
+      next();
     });
-  }(dir, cb));
-};
-
-module.exports.sync = function(filename, cwd, limit) {
-  var dir = cwd ? resolve(cwd) : '.';
-  var fp = path.join(dir, filename);
-  var n = 0;
-  var drive = path.resolve(path.sep);
-
-  if (fs.existsSync(fp)) {
-    return path.resolve(fp);
   }
 
-  if (limit === 0) return null;
+  recurse(dirname, callback);
+}
 
-  while ((dir = path.dirname(dir))) {
-    n++;
+find.promise = function(filename, cwd, limit) {
+  return util.promisify(find)(filename, cwd, limit);
+};
 
-    var filepath = path.resolve(dir, filename);
+find.sync = function(filename, cwd, limit = Infinity) {
+  let dirname = path.resolve(cwd ? resolve(cwd) : '.');
+  let depth = 0;
+  let prev;
+
+  do {
+    const filepath = path.join(dirname, filename);
+
     if (fs.existsSync(filepath)) {
       return filepath;
     }
 
-    if (n >= limit || dir === '.' || dir === path.sep || dir === drive) {
-      return;
-    }
-  }
+    depth++;
+    prev = dirname;
+    dirname = path.dirname(dirname);
+  } while (prev !== dirname && depth <= limit);
 };
 
-/**
- * Returns true if a file exists, since `fs.exists` is deprecated.
- * See: https://nodejs.org/api/fs.html#fs_fs_exists_path_callback
- */
-
-function fileExists(filepath, cb) {
-  fs.stat(filepath, function(err) {
-    if (err && err.code === 'ENOENT') {
-      cb(null, false);
-      return;
-    }
-    if (err) {
-      cb(err);
-      return;
-    }
-    cb(null, true);
-  });
-}
+module.exports = find;
